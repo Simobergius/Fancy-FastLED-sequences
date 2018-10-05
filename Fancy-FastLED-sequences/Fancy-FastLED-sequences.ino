@@ -9,18 +9,22 @@ int del = 1;
 // Fading rolling colors
 #define NUM_SPOTS 2
 int pos = 0;
-int spots[NUM_SPOTS];
+int spots[3];
 
 void setup() {
     FastLED.addLeds<WS2812B, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
-    for (int i = 0; i < NUM_SPOTS; i++) {
-        spots[i] = ((NUM_LEDS - 1) / NUM_SPOTS) * i;
+    Serial.begin(9600);
+    for (int i = 0; i < 3; i++) {
+        spots[i] = ((NUM_LEDS - 1) / 3) * i;
+        Serial.print(spots[i]);
+        Serial.print("\n");
     }
+
 }
 
 void loop() {
 
-    for (int i = 0; i < NUM_SPOTS; i++)
+    for (int i = 0; i < 3; i++)
     {
         // FOR EACH SPOT
         // Move spot forwards by 1
@@ -31,7 +35,7 @@ void loop() {
         uint8_t j = spots[i];
         uint8_t cmpVal;
         if (i == 0) {
-            cmpVal = spots[NUM_SPOTS - 1];
+            cmpVal = spots[3 - 1];
         }
         else {
             cmpVal = spots[i - 1];
