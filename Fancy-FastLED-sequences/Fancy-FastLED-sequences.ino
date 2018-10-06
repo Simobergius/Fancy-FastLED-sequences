@@ -10,56 +10,53 @@ void setup() {
     FastLED.addLeds<WS2812B, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
 }
 
+
+
 // Fading rolling colors (Teardrops)
 
-uint8_t pos = 0;
+uint8_t seq = 1;
 uint8_t curHue = 0;
+uint8_t curVal = 255;
+uint8_t curSat = 255;
 
 void loop() {
+    srandom(millis());
 
     // Scroll leds from first upwards
     for (int i = NUM_LEDS; i > 0; i--) {
         leds[i] = leds[i - 1];
     }
 
-    // Set first leds color
+    // Set first leds color, if it has faded to black, else fade
     if (leds[0] == CRGB(0, 0, 0)) {
-        switch (pos) {
-        case 0:
-            leds[0].setHSV(curHue, 255, 255);
-            curHue += 75;
-        case 1:
 
-        case 2:
-
-        default:
-            pos = 0;
-        }
+        leds[0].setHSV(cubicwave8(curHue), curSat, curVal);
+        curHue += random() % 20 + 0;
     }
     else {
         leds[0].fadeToBlackBy(40);
     }
     FastLED.show();
-    delay(25);
+    delay(50);
 }
 
 // Do nothing
 /*
 void loop() {
-for(int i = 0; i < NUM_LEDS; i++) {
-leds[i] = CRGB::Black;
-}
-FastLED.show();
+    for(int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CRGB::Black;
+    }
+    FastLED.show();
 }
 */
 
 // Set all to const color
 /*
 void loop() {
-for(int i = 0; i < NUM_LEDS; i++) {
-leds[i] = CRGB::White;
-}
-FastLED.show();
+    for(int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CRGB::White;
+    }
+    FastLED.show();
 }
 */
 
@@ -71,22 +68,21 @@ static const CRGB colors[NUM_COLORS] = { CRGB::Red, CRGB::Purple, CRGB::Blue, CR
 CRGB prevColor;
 CRGB currColor;
 
-void loop()
-{
-for(int i = 0; i < NUM_COLORS; i++) {
-for (int d = 0; d <= CHANGE_TIME; d++) {
-currColor.red = map(d, 0, CHANGE_TIME, prevColor.red, colors[i].red);
-currColor.blue = map(d, 0, CHANGE_TIME, prevColor.blue, colors[i].blue);
-currColor.green = map(d, 0, CHANGE_TIME, prevColor.green, colors[i].green);
-for(int j = 0; j < NUM_LEDS; j++) {
-leds[j] = currColor;
-}
-FastLED.show();
-delay(del);
-}
-delay(del * 500);
-prevColor = colors[i];
-}
+void loop() {
+    for(int i = 0; i < NUM_COLORS; i++) {
+        for (int d = 0; d <= CHANGE_TIME; d++) {
+            currColor.red = map(d, 0, CHANGE_TIME, prevColor.red, colors[i].red);
+            currColor.blue = map(d, 0, CHANGE_TIME, prevColor.blue, colors[i].blue);
+            currColor.green = map(d, 0, CHANGE_TIME, prevColor.green, colors[i].green);
+            for(int j = 0; j < NUM_LEDS; j++) {
+                leds[j] = currColor;
+            }
+            FastLED.show();
+            delay(del);
+        }
+        delay(del * 500);
+        prevColor = colors[i];
+    }
 }
 */
 
@@ -94,15 +90,14 @@ prevColor = colors[i];
 /*
 #define NUM_COLORS 3
 static const CRGB colors[NUM_COLORS] = { CRGB::Red, CRGB::Blue, CRGB::Green };
-void loop()
-{
-for(int i = 0; i < NUM_COLORS; i++) {
-for(int j = 0; j < NUM_LEDS; j++) {
-leds[j] = colors[i];
-}
-FastLED.show();
-delay(del);
-}
+void loop() {
+    for(int i = 0; i < NUM_COLORS; i++) {
+        for(int j = 0; j < NUM_LEDS; j++) {
+            leds[j] = colors[i];
+        }
+        FastLED.show();
+        delay(del);
+    }
 }
 */
 
@@ -114,35 +109,35 @@ delay(del);
 int currentColor = 0;
 int it = 0;
 void loop() {
-for(int i = 0; NUM_LEDS > i; i++) {
-leds[i] = leds[i+1];
-}
-if(it < PULSE_LENGTH) {
-leds[NUM_LEDS].setHSV(currentColor, 255, 255);
-} else if (it < PULSE_INTERVAL) {
-leds[NUM_LEDS].setHSV(currentColor, 255, 0);
-} else {
-it = -1;
-currentColor += COLOR_CHANGE;
-}
-FastLED.show();
-it++;
-delay(del);
+    for(int i = 0; NUM_LEDS > i; i++) {
+        leds[i] = leds[i+1];
+    }
+    if(it < PULSE_LENGTH) {
+        leds[NUM_LEDS].setHSV(currentColor, 255, 255);
+    } else if (it < PULSE_INTERVAL) {
+        leds[NUM_LEDS].setHSV(currentColor, 255, 0);
+    } else {
+        it = -1;
+        currentColor += COLOR_CHANGE;
+    }
+    FastLED.show();
+    it++;
+    delay(del);
 }
 */
-// Standing triangular wave // NOT WORKS
+// Standing triangular wave // NOT WORKING
 /*
 #define WAVELENGTH 50
 #define COLOR_RANGE_LOW 0
 #define COLOR_RANGE_HIGH 255
 double wave = 0;
 void loop() {
-for(int i = 0; i < NUM_LEDS; i++) {
-leds[i].setHSV(i+wave , 255, 50);
-}
-wave++;
-FastLED.show();
-delay(del);
+    for(int i = 0; i < NUM_LEDS; i++) {
+        leds[i].setHSV(i+wave , 255, 50);
+    }
+    wave++;
+    FastLED.show();
+    delay(del);
 }
 */
 
@@ -155,26 +150,26 @@ delay(del);
 int currentColor = 0;
 int it = 0;
 void loop() {
-for(int i = 0; i < NUM_LEDS; i+=1) {
-for(int j = 0; j < 1; j++) {
-leds[i+j] = leds[i+j+1];
-}
-
-for(int j = NUM_LEDS; j > NUM_LEDS-1; j--) {
-leds[j].setHSV(currentColor, 255, 50);
-}
-}
-if(it<100) {
-currentColor += POSITIVE_SLOPE;
-}else{
-currentColor -= NEGATIVE_SLOPE;
-}
-currentColor %= 255;
-if(it >= 150)
-it = 0;
-it++;
-FastLED.show();
-delay(del);
+    for(int i = 0; i < NUM_LEDS; i+=1) {
+        for(int j = 0; j < 1; j++) {
+            leds[i+j] = leds[i+j+1];
+        }
+        
+        for(int j = NUM_LEDS; j > NUM_LEDS-1; j--) {
+            leds[j].setHSV(currentColor, 255, 50);
+        }
+    }
+    if(it<100) {
+        currentColor += POSITIVE_SLOPE;
+    }else{
+        currentColor -= NEGATIVE_SLOPE;
+    }
+    currentColor %= 255;
+    if(it >= 150)
+    it = 0;
+    it++;
+    FastLED.show();
+    delay(del);
 }
 */
 /*
@@ -182,10 +177,11 @@ delay(del);
 
 int low = 32, high = 96;
 void loop() {
-for(int i = 0; i < NUM_LEDS; i++)
-leds[i].setHSV(random(low, high), 255, 50);
-FastLED.show();
-delay(del);
+    for(int i = 0; i < NUM_LEDS; i++) {
+        leds[i].setHSV(random(low, high), 255, 50);
+    }
+    FastLED.show();
+    delay(del);
 }
 */
 
@@ -193,12 +189,13 @@ delay(del);
 /*
 int color = 0;
 void loop() {
-for(int i = 0; i < NUM_LEDS; i++)
-leds[i].setHSV(color, 255, 255);
-color += random(15, 240);
-FastLED.show();
-delay(del);
-
+    for(int i = 0; i < NUM_LEDS; i++) {
+        leds[i].setHSV(color, 255, 255);
+    }
+    color += random(15, 240);
+    FastLED.show();
+    delay(del);
+    
 }
 */
 
@@ -207,18 +204,18 @@ delay(del);
 #define SEGMENT_LENGTH 1
 int currentColor = 0;
 void loop() {
-for(int i = 0; i < NUM_LEDS; i+=SEGMENT_LENGTH) {
-for(int j = 0; j < SEGMENT_LENGTH; j++) {
-leds[i+j] = leds[i+j+SEGMENT_LENGTH];
-}
-
-for(int j = NUM_LEDS; j > NUM_LEDS-SEGMENT_LENGTH; j--) {
-leds[j].setHSV(currentColor, 255, random(100, 255));
-}
-}
-currentColor += random(0, 20) - 10;
-FastLED.show();
-delay(del);
+    for(int i = 0; i < NUM_LEDS; i+=SEGMENT_LENGTH) {
+        for(int j = 0; j < SEGMENT_LENGTH; j++) {
+            leds[i+j] = leds[i+j+SEGMENT_LENGTH];
+        }
+        
+        for(int j = NUM_LEDS; j > NUM_LEDS-SEGMENT_LENGTH; j--) {
+            leds[j].setHSV(currentColor, 255, random(100, 255));
+        }
+    }
+    currentColor += random(0, 20) - 10;
+    FastLED.show();
+    delay(del);
 }
 */
 
@@ -226,17 +223,17 @@ delay(del);
 /*
 #define SEGMENT_LENGTH 1
 void loop() {
-for(int i = 0; i < NUM_LEDS; i+=SEGMENT_LENGTH) {
-for(int j = 0; j < SEGMENT_LENGTH; j++) {
-leds[i+j] = leds[i+j+SEGMENT_LENGTH];
-}
-
-for(int j = NUM_LEDS; j > NUM_LEDS-SEGMENT_LENGTH; j--) {
-leds[j].setHSV(random(255), 255, random(100, 255));
-}
-}
-FastLED.show();
-delay(del);
+    for(int i = 0; i < NUM_LEDS; i+=SEGMENT_LENGTH) {
+        for(int j = 0; j < SEGMENT_LENGTH; j++) {
+            leds[i+j] = leds[i+j+SEGMENT_LENGTH];
+        }
+        
+        for(int j = NUM_LEDS; j > NUM_LEDS-SEGMENT_LENGTH; j--) {
+            leds[j].setHSV(random(255), 255, random(100, 255));
+        }
+    }
+    FastLED.show();
+    delay(del);
 }
 */
 
@@ -244,60 +241,57 @@ delay(del);
 /*
 #define SEGMENT_LENGTH 5
 void loop() {
-for(int i = 0; i < NUM_LEDS; i+=SEGMENT_LENGTH) {
-for(int j = 0; j < SEGMENT_LENGTH; j++) {
-leds[i+j] = leds[i+j-SEGMENT_LENGTH];
-if(i+j < SEGMENT_LENGTH) {
-leds[i+j].setHSV(random(255), 255, random(100, 255));
-}
-}
-}
-FastLED.show();
-delay(del);
+    for(int i = 0; i < NUM_LEDS; i+=SEGMENT_LENGTH) {
+        for(int j = 0; j < SEGMENT_LENGTH; j++) {
+            leds[i+j] = leds[i+j-SEGMENT_LENGTH];
+            if(i+j < SEGMENT_LENGTH) {
+                leds[i+j].setHSV(random(255), 255, random(100, 255));
+            }
+        }
+    }
+    FastLED.show();
+    delay(del);
 }
 */
 
 /*
 // Kaikki Random
 void loop() {
-for(int i = 0; i < NUM_LEDS; i+=6) {
-leds[i].setHSV(random(255), 255, random(100, 255));
-leds[i+1].setHSV(random(255), 255, random(100, 255));
-leds[i+2].setHSV(random(255), 255, random(100, 255));
-}
-FastLED.show();
-delay(500);
-for(int i = 3; i < NUM_LEDS; i+=6) {
-leds[i].setHSV(random(255), 255, random(100, 255));
-leds[i+1].setHSV(random(255), 255, random(100, 255));
-leds[i+2].setHSV(random(255), 255, random(100, 255));
-}
-FastLED.show();
-delay(del);
+    for(int i = 0; i < NUM_LEDS; i+=6) {
+        leds[i].setHSV(random(255), 255, random(100, 255));
+        leds[i+1].setHSV(random(255), 255, random(100, 255));
+        leds[i+2].setHSV(random(255), 255, random(100, 255));
+    }
+    FastLED.show();
+    delay(500);
+    for(int i = 3; i < NUM_LEDS; i+=6) {
+        leds[i].setHSV(random(255), 255, random(100, 255));
+        leds[i+1].setHSV(random(255), 255, random(100, 255));
+        leds[i+2].setHSV(random(255), 255, random(100, 255));
+    }
+    FastLED.show();
+    delay(del);
 }
 */
 
 // Rullaava constant colors
 /*
 void loop() {
-for(int i = 0; i < NUM_LEDS; i++)
-{
-leds[i] = CRGB::Red;
-FastLED.show();
-delay(del);
-}
-for(int i = 0; i < NUM_LEDS; i++)
-{
-leds[i] = CRGB::Green;
-FastLED.show();
-delay(del);
-}
-for(int i = 0; i < NUM_LEDS; i++)
-{
-leds[i] = CRGB::Blue;
-FastLED.show();
-delay(del);
-}
+    for(int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CRGB::Red;
+        FastLED.show();
+        delay(del);
+    }
+    for(int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CRGB::Green;
+        FastLED.show();
+        delay(del);
+    }
+    for(int i = 0; i < NUM_LEDS; i++) {
+        leds[i] = CRGB::Blue;
+        FastLED.show();
+        delay(del);
+    }
 }
 */
 
