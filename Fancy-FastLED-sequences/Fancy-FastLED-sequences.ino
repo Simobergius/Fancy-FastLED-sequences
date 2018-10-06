@@ -6,56 +6,41 @@
 CRGB leds[NUM_LEDS];
 int del = 1;
 
-// Fading rolling colors
-#define NUM_SPOTS 2
-int pos = 0;
-int spots[3];
-
 void setup() {
     FastLED.addLeds<WS2812B, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
-    Serial.begin(9600);
-    for (int i = 0; i < 3; i++) {
-        spots[i] = ((NUM_LEDS - 1) / 3) * i;
-        Serial.print(spots[i]);
-        Serial.print("\n");
-    }
-
 }
+
+// Fading rolling colors (Teardrops)
+
+uint8_t pos = 0;
+uint8_t curHue = 0;
 
 void loop() {
 
-    for (int i = 0; i < 3; i++)
-    {
-        // FOR EACH SPOT
-        // Move spot forwards by 1
-        leds[spots[i] + 1] = leds[spots[i]];
-
-        // FADE ALL LEDS BEFORE SPOT BUT AFTER PREVIOUS SPOT (cmpVal)
-        // By amount
-        uint8_t j = spots[i];
-        uint8_t cmpVal;
-        if (i == 0) {
-            cmpVal = spots[3 - 1];
-        }
-        else {
-            cmpVal = spots[i - 1];
-        }
-        while (j != cmpVal) {
-            leds[j].fadeToBlackBy(40);
-            j--;
-            if (j < 0)
-                j = NUM_LEDS;
-        }
-        spots[i]++;
-        if (spots[i] >= NUM_LEDS) {
-            spots[i] = 0;
-            leds[spots[i]] = CRGB::Blue;
-        }
+    // Scroll leds from first upwards
+    for (int i = NUM_LEDS; i > 0; i--) {
+        leds[i] = leds[i - 1];
     }
 
+    // Set first leds color
+    if (leds[0] == CRGB(0, 0, 0)) {
+        switch (pos) {
+        case 0:
+            leds[0].setHSV(curHue, 255, 255);
+            curHue += 75;
+        case 1:
+
+        case 2:
+
+        default:
+            pos = 0;
+        }
+    }
+    else {
+        leds[0].fadeToBlackBy(40);
+    }
     FastLED.show();
-    pos++;
-    //delay(50);
+    delay(25);
 }
 
 // Do nothing
