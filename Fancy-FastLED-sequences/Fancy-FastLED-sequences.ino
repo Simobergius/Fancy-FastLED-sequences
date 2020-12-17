@@ -1,10 +1,10 @@
 #include <FastLED.h>
-#define NUM_LEDS 144
-#define DATA_PIN 6
+#define NUM_LEDS 300
+#define DATA_PIN 12
 #define COLOR_ORDER GRB
 
 CRGB leds[NUM_LEDS];
-int del = 1;
+int del = 50;
 
 void setup() {
     FastLED.addLeds<WS2812B, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
@@ -12,8 +12,30 @@ void setup() {
 
 
 
-// Fading rolling colors (Teardrops)
+// Random blinks that fade
 
+void loop() {
+  srandom(millis());
+
+  for (int i = 0; i < NUM_LEDS; i++) {
+    // Decrease brightness
+    leds[i].fadeToBlackBy(20);
+    
+    // Random change for led to be lit
+    if (leds[i] == CRGB(0,0,0)) {
+      if (random() % 200 < 1) {
+        leds[i].setHSV(random() % 255, 255, 255);
+      }
+    }
+    
+  }
+  FastLED.show();
+  delay(del);
+}
+
+
+// Fading rolling colors (Teardrops)
+/*
 uint8_t seq = 1;
 uint8_t curHue = 0;
 uint8_t curVal = 255;
@@ -34,17 +56,32 @@ void loop() {
         curHue += random() % 20 + 0;
     }
     else {
-        leds[0].fadeToBlackBy(40);
+        leds[0].fadeToBlackBy(random() % 100 + 20);
     }
     FastLED.show();
-    delay(50);
+    delay(del);
 }
-
+*/
 // Do nothing
 /*
 void loop() {
     for(int i = 0; i < NUM_LEDS; i++) {
         leds[i] = CRGB::Black;
+    }
+    FastLED.show();
+}
+*/
+
+// Set one to const color
+/*
+void loop() {
+    for(int i = 0; i < NUM_LEDS; i++) {
+      if (i == 15) {
+        leds[i] = CRGB::White;
+      }
+      else{
+        leds[i] = CRGB::Black;
+      }
     }
     FastLED.show();
 }
@@ -217,7 +254,7 @@ void loop() {
     FastLED.show();
     delay(del);
 }
-*/
+/*
 
 // Rolling segments
 /*
@@ -294,4 +331,3 @@ void loop() {
     }
 }
 */
-
