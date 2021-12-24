@@ -4,26 +4,30 @@
 #define COLOR_ORDER GRB
 
 CRGB leds[NUM_LEDS];
-int del = 50;
+int del = 20;
 
 void setup() {
     FastLED.addLeds<WS2812B, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
 }
 
 
-
-// Random blinks that fade
-
+// Random blinks initiate droplet
 void loop() {
   srandom(millis());
 
-  for (int i = 0; i < NUM_LEDS; i++) {
-    // Decrease brightness
-    leds[i].fadeToBlackBy(20);
+  for (int i = NUM_LEDS; i > 0; i--) {
     
-    // Random change for led to be lit
+    if (leds[i-1] != CRGB(0,0,0)) {
+      // For waterfall effect
+      leds[i]= leds[i-1];
+    }
+    
+    // Decrease brightness
+    leds[i].fadeToBlackBy(50);
+    
+    // Random change for unlit led to be lit
     if (leds[i] == CRGB(0,0,0)) {
-      if (random() % 200 < 1) {
+      if (random() % 1000 < 1) {
         leds[i].setHSV(random() % 255, 255, 255);
       }
     }
@@ -33,6 +37,53 @@ void loop() {
   delay(del);
 }
 
+// Random "waterfalling" dots
+/*
+void loop() {
+  srandom(millis());
+
+  for (int i = NUM_LEDS; i > 0; i--) {
+    // Decrease brightness
+    leds[i].fadeToBlackBy(50);
+    
+    if (leds[i-1] != CRGB(0,0,0)) {
+      // For waterfall effect
+      leds[i]= leds[i-1];
+    }
+    
+    // Random change for unlit led to be lit
+    if (leds[i] == CRGB(0,0,0)) {
+      if (random() % 400 < 1) {
+        leds[i].setHSV(random() % 255, 255, 255);
+      }
+    }
+    
+  }
+  FastLED.show();
+  delay(del);
+}
+*/
+// Random blinks that fade
+/*
+void loop() {
+  srandom(millis());
+
+  for (int i = NUM_LEDS; i > 0; i--) {
+    // Decrease brightness
+    leds[i].fadeToBlackBy(50);
+    
+    // Random change for unlit led to be lit
+    if (leds[i] == CRGB(0,0,0)) {
+      if (random() % 400 < 1) {
+        leds[i].setHSV(random() % 255, 255, 255);
+      }
+    }
+    
+  }
+  FastLED.show();
+  delay(del);
+}
+*/
 
 // Fading rolling colors (Teardrops)
 /*
