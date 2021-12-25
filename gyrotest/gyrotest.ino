@@ -58,7 +58,9 @@ void setupAccel(int device) {
   Wire.endTransmission();
   Wire.beginTransmission(device);
   Wire.write(0x38);
-  Wire.write(0x84);
+  //Wire.write(0x84); // FIFO causes delay
+  Wire.write(0x00); // No FIFO delay
+  
   Wire.endTransmission();
  
 }
@@ -180,6 +182,9 @@ void loop()
   //output(compass);
   //Serial.print(",G,");  
   //output(gyro);
+  int absG = sqrt(pow(gyro.value.x, 2) + pow(gyro.value.y, 2) + pow(gyro.value.z, 2));
+  //Serial.print(",abs(G),");
+  //Serial.print(absG);
   /*
   Serial.print(",L,");
   Serial.print(l1);

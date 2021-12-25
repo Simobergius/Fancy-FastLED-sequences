@@ -12,17 +12,17 @@
 #define NUM_LEDS 490
 #define DATA_PIN 13
 #define COLOR_ORDER GRB
-#define LED_BATCH 10
+#define LED_BATCH 5
 
-#define GYRO_CLAMP 300
+#define GYRO_CLAMP 3000
 
 #define ACCEL_G 260
-#define ACCEL_CLAMP 200
+#define ACCEL_CLAMP 50
  
 #define GYROADDR 0x68
 #define ACCELADDR 0x53
 
-int prevGyroAbs = 0;
+int prevAbsA = 0;
 
 CRGB leds[NUM_LEDS];
 int del = 1;
@@ -73,7 +73,7 @@ void setupAccel(int device) {
   Wire.endTransmission();
   Wire.beginTransmission(device);
   Wire.write(0x38);
-  Wire.write(0x84);
+  Wire.write(0x00);
   Wire.endTransmission();
  
 }
@@ -118,6 +118,11 @@ void setup()
   FastLED.show();
   delay(100);
 }
+
+int limit(int value, int a_min, int a_max)
+{
+  return max(min(value, a_max), a_min);
+}
  
 void loop()
 {
@@ -131,16 +136,19 @@ void loop()
   {
     absA = 0;
   }
-  int rotabs = abs(gyro.value.x) + abs(gyro.value.y) + abs(gyro.value.z);
-  if (rotabs > 0xffff)
+  
+  int absGYZ = sqrt(pow(gyro.value.y, 2) + pow(gyro.value.z, 2));
+  absGYZ -= GYRO_CLAMP;
+  if (absGYZ < 0)
   {
-    rotabs = 0xffff;
+    absGYZ = 0;
   }
-  if ( rotabs < GYRO_CLAMP )
+  int absGX = abs(gyro.value.x) - GYRO_CLAMP * 6;
+  if (absGX < 0)
   {
-    rotabs = 0;
+    absGX = 0;
   }
-  rotabs -= GYRO_CLAMP;
+  
   // Scroll leds from first upwards
   for (int i = NUM_LEDS; i > 0; i-=LED_BATCH) {
     for ( int j = 0; j < LED_BATCH; j++)
@@ -152,10 +160,12 @@ void loop()
   // Set first leds according to gyro data
   for (int i = 0; i < LED_BATCH; i++)
   {
-    leds[i].setHSV(random(150, 190), random(100, 255), map(rotabs, 0,0xffff, 0, 128));
-    leds[i].red += absA;
+    leds[i].setHSV(random(140, 200), random(100, 255), limit(map(absGYZ, 0, 0xffff, 0, 32), 0, 255));
+    leds[i].red = limit(map(max(absA, prevAbsA), 0, 0xffff, 0, 255), 0, 255);
+    leds[i].green += limit(map(absGX, 0, 0xffff, 0, 32), 0, 255);
     //leds[i] = CRGB(map(abs(gyro.value.x), 0, 0xffff, 0, 128), map(abs(gyro.value.y), 0, 0xffff, 0, 128), map(abs(gyro.value.z), 0, 0xffff, 0, 128));
   }
   FastLED.show();
+  prevAbsA = absA;
   //delay(del);
 }
