@@ -1,0 +1,6 @@
+{
+    "configuration": "cpu=atmega328old",
+    "board": "arduino:avr:nano",
+    "sketch": "Fancy-FastLED-sequences\\Fancy-FastLED-sequences.ino",
+    "port": "COM10"
+}

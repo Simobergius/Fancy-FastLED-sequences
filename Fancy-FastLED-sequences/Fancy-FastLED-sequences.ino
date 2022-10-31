@@ -10,7 +10,40 @@ void setup() {
     FastLED.addLeds<WS2812B, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
 }
 
+// According to potentiometer position
+static const uint16_t ADC_BUF_SIZE = 10;
+static uint16_t adcBuffer[ADC_BUF_SIZE];
+static uint8_t bufPos = 0;
+uint16_t average = 0;
+uint16_t mapped = 0;
+void loop()
+{
+    uint16_t adcVal = analogRead(A1);
+    adcBuffer[bufPos] = adcVal;
+    // moving average
+    bufPos++;
+    if ( bufPos == ADC_BUF_SIZE )
+    {
+        bufPos = 0;
+        average = 0;
+        for ( int i = 0; i < ADC_BUF_SIZE; i++)
+        {
+            average += adcBuffer[i];
+        }
+        average /= ADC_BUF_SIZE;
 
+        // fade previous to black
+        for (int j = NUM_LEDS; j >= 0; j--) {
+            // Decrease brightness
+            leds[j].fadeToBlackBy(20);
+        }
+        mapped = map(average, 0, 1024, 0, NUM_LEDS);
+        leds[mapped] = CRGB::White;
+        FastLED.show();
+    }
+    delay(1);
+}
+/*
 // Random blinks initiate droplet
 void loop() {
   srandom(millis());
@@ -36,6 +69,7 @@ void loop() {
   FastLED.show();
   delay(del);
 }
+*/
 
 // Random "waterfalling" dots
 /*
