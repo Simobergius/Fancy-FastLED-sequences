@@ -7,21 +7,21 @@ CRGB leds[NUM_LEDS];
 int del = 20;
 
 void setup() {
-    FastLED.addLeds<WS2812B, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+  FastLED.addLeds<WS2812B, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
 }
-
+/*
 // According to potentiometer position
 static const uint16_t ADC_BUF_SIZE = 10;
 static uint16_t adcBuffer[ADC_BUF_SIZE];
 static uint8_t bufPos = 0;
 uint16_t average = 0;
 uint16_t mapped = 0;
+uint16_t previous = NUM_LEDS + 1;
 void loop()
 {
     uint16_t adcVal = analogRead(A1);
-    adcBuffer[bufPos] = adcVal;
+    adcBuffer[bufPos++] = adcVal;
     // moving average
-    bufPos++;
     if ( bufPos == ADC_BUF_SIZE )
     {
         bufPos = 0;
@@ -32,39 +32,50 @@ void loop()
         }
         average /= ADC_BUF_SIZE;
 
-        // fade previous to black
+        // fade others to black
         for (int j = NUM_LEDS; j >= 0; j--) {
             // Decrease brightness
             leds[j].fadeToBlackBy(20);
         }
-        mapped = map(average, 0, 1024, 0, NUM_LEDS);
+        mapped = map(average, 0, 1000, 0, NUM_LEDS-1);
+        mapped = constrain(mapped, 0, NUM_LEDS-1);
+        while ( previous < mapped )
+        {
+            previous++;
+            leds[previous] = CRGB::White;
+        }
+        while ( previous > mapped )
+        {
+            previous--;
+            leds[previous] = CRGB::White;
+        }
         leds[mapped] = CRGB::White;
         FastLED.show();
     }
-    delay(1);
 }
+*/
 /*
 // Random blinks initiate droplet
 void loop() {
   srandom(millis());
 
   for (int i = NUM_LEDS; i > 0; i--) {
-    
+
     if (leds[i-1] != CRGB(0,0,0)) {
       // For waterfall effect
       leds[i]= leds[i-1];
     }
-    
+
     // Decrease brightness
     leds[i].fadeToBlackBy(50);
-    
+
     // Random change for unlit led to be lit
     if (leds[i] == CRGB(0,0,0)) {
       if (random() % 1000 < 1) {
         leds[i].setHSV(random() % 255, 255, 255);
       }
     }
-    
+
   }
   FastLED.show();
   delay(del);
@@ -79,19 +90,19 @@ void loop() {
   for (int i = NUM_LEDS; i > 0; i--) {
     // Decrease brightness
     leds[i].fadeToBlackBy(50);
-    
+
     if (leds[i-1] != CRGB(0,0,0)) {
       // For waterfall effect
       leds[i]= leds[i-1];
     }
-    
+
     // Random change for unlit led to be lit
     if (leds[i] == CRGB(0,0,0)) {
       if (random() % 400 < 1) {
         leds[i].setHSV(random() % 255, 255, 255);
       }
     }
-    
+
   }
   FastLED.show();
   delay(del);
@@ -100,24 +111,64 @@ void loop() {
 // Random blinks that fade
 /*
 void loop() {
-  srandom(millis());
+  // Seed rngenerator using analog value which contains noise
+  srandom(millis() + analogRead(A2));
 
   for (int i = NUM_LEDS; i > 0; i--) {
     // Decrease brightness
     leds[i].fadeToBlackBy(50);
-    
+
     // Random change for unlit led to be lit
     if (leds[i] == CRGB(0,0,0)) {
-      if (random() % 400 < 1) {
-        leds[i].setHSV(random() % 255, 255, 255);
+      if (random() % 800 < 1) {
+        //leds[i].setHSV(random() % 255, 255, 255);
+        leds[i] = CRGB::White;
       }
     }
-    
+
   }
   FastLED.show();
   delay(del);
 }
 */
+// Random blinks that fade in and out
+bool fadingIn[NUM_LEDS] = { 0 };
+void loop() {
+  // Seed rngenerator using analog value which contains noise
+  srandom(millis() + analogRead(A2));
+
+  for (int i = NUM_LEDS; i > 0; i--) {
+    if ( fadingIn[i] )
+    {
+      // Increase brightness
+      leds[i].addToRGB(30);
+    }
+    else
+    {
+      // Decrease brightness
+      leds[i].subtractFromRGB(30);
+    }
+
+    // Random chance for completely lit led to start fading
+    if ( leds[i] == CRGB( 255, 255, 255 ) )
+    {
+      if (random() % 25 < 1) {
+        // Add to list of fadingIn
+        fadingIn[i] = false;
+      }
+    }
+
+    // Random chance for unlit led to be lit
+    if (leds[i] == CRGB(0, 0, 0)) {
+      if (random() % 200 < 1) {
+        // Add to list of fadingIn
+        fadingIn[i] = true;
+      }
+    }
+  }
+  FastLED.show();
+  delay(del);
+}
 
 // Fading rolling colors (Teardrops)
 /*
@@ -182,22 +233,20 @@ void loop() {
 }
 */
 
-//Smooth transition between const colors
+// Smooth transition between const colors
 /*
 #define NUM_COLORS 5
 #define CHANGE_TIME 50
-static const CRGB colors[NUM_COLORS] = { CRGB::Red, CRGB::Purple, CRGB::Blue, CRGB::Green, CRGB::Yellow};
-CRGB prevColor;
-CRGB currColor;
+static const CRGB colors[NUM_COLORS] = { CRGB::Red, CRGB::Purple, CRGB::Blue,
+CRGB::Green, CRGB::Yellow}; CRGB prevColor; CRGB currColor;
 
 void loop() {
     for(int i = 0; i < NUM_COLORS; i++) {
         for (int d = 0; d <= CHANGE_TIME; d++) {
-            currColor.red = map(d, 0, CHANGE_TIME, prevColor.red, colors[i].red);
-            currColor.blue = map(d, 0, CHANGE_TIME, prevColor.blue, colors[i].blue);
-            currColor.green = map(d, 0, CHANGE_TIME, prevColor.green, colors[i].green);
-            for(int j = 0; j < NUM_LEDS; j++) {
-                leds[j] = currColor;
+            currColor.red = map(d, 0, CHANGE_TIME, prevColor.red,
+colors[i].red); currColor.blue = map(d, 0, CHANGE_TIME, prevColor.blue,
+colors[i].blue); currColor.green = map(d, 0, CHANGE_TIME, prevColor.green,
+colors[i].green); for(int j = 0; j < NUM_LEDS; j++) { leds[j] = currColor;
             }
             FastLED.show();
             delay(del);
@@ -208,7 +257,7 @@ void loop() {
 }
 */
 
-//Flash const colors
+// Flash const colors
 /*
 #define NUM_COLORS 3
 static const CRGB colors[NUM_COLORS] = { CRGB::Red, CRGB::Blue, CRGB::Green };
@@ -276,7 +325,7 @@ void loop() {
         for(int j = 0; j < 1; j++) {
             leds[i+j] = leds[i+j+1];
         }
-        
+
         for(int j = NUM_LEDS; j > NUM_LEDS-1; j--) {
             leds[j].setHSV(currentColor, 255, 50);
         }
@@ -317,7 +366,7 @@ void loop() {
     color += random(15, 240);
     FastLED.show();
     delay(del);
-    
+
 }
 */
 
@@ -330,7 +379,7 @@ void loop() {
         for(int j = 0; j < SEGMENT_LENGTH; j++) {
             leds[i+j] = leds[i+j+SEGMENT_LENGTH];
         }
-        
+
         for(int j = NUM_LEDS; j > NUM_LEDS-SEGMENT_LENGTH; j--) {
             leds[j].setHSV(currentColor, 255, random(100, 255));
         }
@@ -349,7 +398,7 @@ void loop() {
         for(int j = 0; j < SEGMENT_LENGTH; j++) {
             leds[i+j] = leds[i+j+SEGMENT_LENGTH];
         }
-        
+
         for(int j = NUM_LEDS; j > NUM_LEDS-SEGMENT_LENGTH; j--) {
             leds[j].setHSV(random(255), 255, random(100, 255));
         }
