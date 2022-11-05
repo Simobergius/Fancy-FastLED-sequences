@@ -1,16 +1,85 @@
 #include <FastLED.h>
-#define NUM_LEDS 300
-#define DATA_PIN 12
-#define COLOR_ORDER GRB
+#include "HW.h"
 
 CRGB leds[NUM_LEDS];
+CHSV ledshsv[NUM_LEDS];
 int del = 20;
 
 void setup() {
   FastLED.addLeds<WS2812B, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
 }
+
+// Random independent ripple
+// use CHSV leds
+uint8_t additionConstrain( uint8_t in, int8_t op )
+{
+  uint16_t temp = in + 255;
+  temp += op;
+  temp = constrain( temp, 255, 255 + 255);
+  return temp - 255;
+}
+
+void loop() {
+  srandom( millis() + analogRead(A1) + analogRead(A2));
+  for ( int i = 0; i < NUM_LEDS; i++)
+  {
+    ledshsv[i].h += (random() % 4) - 1;
+    //ledshsv[i].s = additionConstrain( ledshsv[i].s, (random() % 6) - 2 );
+    //ledshsv[i].v = additionConstrain( ledshsv[i].v, (random() % 3) - 1 );
+    ledshsv[i].s = 255;
+    ledshsv[i].v = 255;
+    hsv2rgb_rainbow(ledshsv[i], leds[i]);
+    //leds[i].setHSV(ledshsv[i]);
+  }
+  FastLED.show();
+}
+
+// According to potentiometer position ( all until pot pos)
 /*
-// According to potentiometer position
+static const uint16_t ADC_BUF_SIZE = 10;
+static uint16_t adcBuffer[ADC_BUF_SIZE];
+static uint8_t bufPos = 0;
+uint16_t average = 0;
+uint16_t mapped = 0;
+uint16_t previous = NUM_LEDS + 1;
+uint16_t adcMax = 0;
+void loop()
+{
+  uint16_t adcVal = analogRead(A1);
+  adcBuffer[bufPos++] = adcVal;
+  // moving average
+  if ( bufPos == ADC_BUF_SIZE )
+  {
+    bufPos = 0;
+    average = 0;
+    for ( int i = 0; i < ADC_BUF_SIZE; i++)
+    {
+      average += adcBuffer[i];
+    }
+    average /= ADC_BUF_SIZE;
+    if ( average > adcMax )
+    {
+      adcMax = average;
+    }
+    mapped = map(average, 0, adcMax - 20, 0, NUM_LEDS);
+    mapped = constrain(mapped, 0, NUM_LEDS);
+    for ( int i = 0; i < NUM_LEDS; i++ )
+    {
+      if ( i < mapped )
+      {
+        leds[i] = CRGB::White;
+      }
+      else
+      {
+        leds[i] = CRGB::Black;
+      }
+    }
+    FastLED.show();
+  }
+}
+*/
+/*
+// According to potentiometer position (only pot pos, fading transition)
 static const uint16_t ADC_BUF_SIZE = 10;
 static uint16_t adcBuffer[ADC_BUF_SIZE];
 static uint8_t bufPos = 0;
@@ -19,39 +88,38 @@ uint16_t mapped = 0;
 uint16_t previous = NUM_LEDS + 1;
 void loop()
 {
-    uint16_t adcVal = analogRead(A1);
-    adcBuffer[bufPos++] = adcVal;
-    // moving average
-    if ( bufPos == ADC_BUF_SIZE )
+  uint16_t adcVal = analogRead(A1);
+  adcBuffer[bufPos++] = adcVal;
+  // moving average
+  if ( bufPos == ADC_BUF_SIZE )
+  {
+    bufPos = 0;
+    average = 0;
+    for ( int i = 0; i < ADC_BUF_SIZE; i++)
     {
-        bufPos = 0;
-        average = 0;
-        for ( int i = 0; i < ADC_BUF_SIZE; i++)
-        {
-            average += adcBuffer[i];
-        }
-        average /= ADC_BUF_SIZE;
-
-        // fade others to black
-        for (int j = NUM_LEDS; j >= 0; j--) {
-            // Decrease brightness
-            leds[j].fadeToBlackBy(20);
-        }
-        mapped = map(average, 0, 1000, 0, NUM_LEDS-1);
-        mapped = constrain(mapped, 0, NUM_LEDS-1);
-        while ( previous < mapped )
-        {
-            previous++;
-            leds[previous] = CRGB::White;
-        }
-        while ( previous > mapped )
-        {
-            previous--;
-            leds[previous] = CRGB::White;
-        }
-        leds[mapped] = CRGB::White;
-        FastLED.show();
+      average += adcBuffer[i];
     }
+    average /= ADC_BUF_SIZE;
+    // fade others to black
+    for (int j = NUM_LEDS; j >= 0; j--) {
+      // Decrease brightness
+      leds[j].fadeToBlackBy(20);
+    }
+    mapped = map(average, 0, 1000, 0, NUM_LEDS-1);
+    mapped = constrain(mapped, 0, NUM_LEDS-1);
+    while ( previous < mapped )
+    {
+      previous++;
+      leds[previous] = CRGB::White;
+    }
+    while ( previous > mapped )
+    {
+      previous--;
+      leds[previous] = CRGB::White;
+    }
+    leds[mapped] = CRGB::White;
+    FastLED.show();
+  }
 }
 */
 /*
@@ -87,19 +155,20 @@ void loop() {
 void loop() {
   srandom(millis());
 
-  for (int i = NUM_LEDS; i > 0; i--) {
+  for (int i = NUM_LEDS-1; i >= 0; i--) {
     // Decrease brightness
-    leds[i].fadeToBlackBy(50);
 
-    if (leds[i-1] != CRGB(0,0,0)) {
+    if (leds[i] != CRGB(0,0,0)) {
       // For waterfall effect
-      leds[i]= leds[i-1];
+      leds[ (i+1) % NUM_LEDS]= leds[i];
+      leds[i].fadeToBlackBy(30);
     }
+    leds[ (i+1) % NUM_LEDS].fadeToBlackBy(5);
 
     // Random change for unlit led to be lit
     if (leds[i] == CRGB(0,0,0)) {
-      if (random() % 400 < 1) {
-        leds[i].setHSV(random() % 255, 255, 255);
+      if (random() % 1600 < 1) {
+        leds[i].setHSV(random() % 255, 255, random() % 75 + 180);
       }
     }
 
@@ -132,6 +201,7 @@ void loop() {
 }
 */
 // Random blinks that fade in and out
+/*
 bool fadingIn[NUM_LEDS] = { 0 };
 void loop() {
   // Seed rngenerator using analog value which contains noise
@@ -169,7 +239,7 @@ void loop() {
   FastLED.show();
   delay(del);
 }
-
+*/
 // Fading rolling colors (Teardrops)
 /*
 uint8_t seq = 1;
